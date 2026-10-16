@@ -142,7 +142,7 @@ def report(value, result, failed):
     status = ('本次检查失败，暂时无法确认发放状态。请查看 GitHub Actions 运行记录。'
               if failed else '\n'.join(k + '：' + labels[v] for k, v in result.items()))
     deliver('证书监测定期汇报：累计自动运行 ' + str(value['runs']) + ' 次',
-            '这是每累计 20 次自动运行的状态汇报。\n\n' + status
+            '这是每累计 10 次自动运行的状态汇报。\n\n' + status
             + '\n\n' + URL + '\n\n手动测试不计数；GitHub 调度可能延迟。')
 
 
@@ -157,7 +157,7 @@ def main():
         value['runs'] += 1
         sha = save_counter(value, sha)
         print('Automatic run count: ' + str(value['runs']), flush=True)
-    due = value is not None and value['runs'] // 20 > value['reported_batch']
+    due = value is not None and value['runs'] // 10 > value['reported_batch']
     try:
         result = check()
         if 'unknown' in result.values():
@@ -165,7 +165,7 @@ def main():
     except Exception:
         if due:
             report(value, {}, failed=True)
-            value['reported_batch'] = value['runs'] // 20
+            value['reported_batch'] = value['runs'] // 10
             save_counter(value, sha)
             print('Periodic failure report sent.', flush=True)
         raise
@@ -174,7 +174,7 @@ def main():
     if not issued:
         if due:
             report(value, result, failed=False)
-            value['reported_batch'] = value['runs'] // 20
+            value['reported_batch'] = value['runs'] // 10
             save_counter(value, sha)
             print('Periodic status report sent.', flush=True)
         if os.environ.get('TEST_EMAIL') == 'true':
