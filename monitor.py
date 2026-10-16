@@ -40,15 +40,21 @@ def check():
         browser = pw.chromium.launch()
         page = browser.new_page()
         page.set_default_timeout(30000)
+        print('Stage: open certificate page', flush=True)
         page.goto(URL, wait_until='domcontentloaded')
+        page.get_by_role('textbox').nth(0).or_(page.get_by_role('link', name='退出', exact=True)).first.wait_for()
         if 'sso.unipus.cn' in page.url:
+            print('Stage: fill login form', flush=True)
             fields = page.get_by_role('textbox')
             fields.nth(0).fill(os.environ['SITE_USERNAME'])
             fields.nth(1).fill(os.environ['SITE_PASSWORD'])
+            print('Stage: login options', flush=True)
             page.get_by_role('checkbox', name='记住我', exact=True).uncheck()
             page.get_by_role('checkbox', name='我已阅读并同意', exact=False).check()
             page.get_by_role('button', name='登录', exact=True).click()
+            print('Stage: wait for certificate page', flush=True)
         page.wait_for_url('https://stu-ucc.fltrp.com/uchallenge/certificate.html', timeout=45000)
+        print('Stage: verify year tab', flush=True)
         page.get_by_role('link', name='2026证书查看', exact=False).wait_for()
         # Require a download control in the same smallest course card. Merely
         # losing the "not issued" text never constitutes evidence of issuance.
