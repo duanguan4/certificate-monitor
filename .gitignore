@@ -1,0 +1,5 @@
+__pycache__/
+.env
+*.png
+*.html
+storage_state*.json
