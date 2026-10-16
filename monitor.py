@@ -82,14 +82,17 @@ def check():
         return result
 
 
-def send(issued):
+def send(issued, test=False):
     msg = EmailMessage()
     msg['From'] = os.environ['SMTP_USER']
     msg['To'] = os.environ['MAIL_TO']
-    msg['Subject'] = '外研社证书已可下载'
-    msg.set_content('检测到以下 2026 年英语组校赛证书已出现下载入口：\n'
+    msg['Subject'] = '证书监测测试：云端检查与邮件已连通' if test else '外研社证书已可下载'
+    content = ('这是一封测试邮件。GitHub 云端已成功登录并检查证书页面。\n'
+               '此邮件不代表证书已发放。自动监测将继续运行。\n' + URL) if test else (
+                    '检测到以下 2026 年英语组校赛证书已出现下载入口：\n'
                     + '\n'.join(issued) + '\n\n请登录官网确认并下载：\n' + URL
                     + '\n\n本次提醒发送后，自动监测将停止。')
+    msg.set_content(content)
     with smtplib.SMTP_SSL('smtp.qq.com', 465, context=ssl.create_default_context(), timeout=30) as smtp:
         smtp.login(os.environ['SMTP_USER'], os.environ['SMTP_PASSWORD'])
         smtp.send_message(msg)
@@ -106,6 +109,9 @@ def main():
         raise RuntimeError('Page format changed or certificate status could not be verified.')
     issued = [key for key, status in result.items() if status == 'issued']
     if not issued:
+        if os.environ.get('TEST_EMAIL') == 'true':
+            send([], test=True)
+            print('Test email sent; monitoring remains enabled.')
         return
     send(issued)
     # Public marker contains no identity, page content, course results or secrets.
