@@ -5,6 +5,7 @@ Never save page content, cookies, screenshots, passwords or personal data.
 import base64
 import json
 import os
+import re
 import smtplib
 import ssl
 import sys
@@ -56,6 +57,9 @@ def check():
         page.wait_for_url('https://stu-ucc.fltrp.com/uchallenge/certificate.html', timeout=45000)
         print('Stage: verify year tab', flush=True)
         page.get_by_role('link', name='2026证书查看', exact=False).wait_for()
+        print('Stage: wait for certificate data', flush=True)
+        for target in TARGETS:
+            page.locator('p').filter(has_text=re.compile('2026.*' + target + '.*校赛')).first.wait_for()
         # Require a download control in the same smallest course card. Merely
         # losing the "not issued" text never constitutes evidence of issuance.
         result = page.evaluate('''(targets) => {
